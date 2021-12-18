@@ -26,16 +26,12 @@ class ContWatchCorut : AppCompatActivity() {
         textSecondsElapsed = findViewById(R.id.textSecondsElapsed)
         sharedPreferences = getSharedPreferences(shrStg, MODE_PRIVATE)
         secondsElapsed = sharedPreferences.getInt(keyCounter, 0)
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                while (isActive) {
-                    Log.i("Coroutines", "running")
-                    delay(1000)
-                    secondsElapsed++
-                    textSecondsElapsed.post {
-                        textSecondsElapsed.text = getString(R.string.seconds, secondsElapsed)
-                    }
-                }
+        lifecycleScope.launchWhenStarted {
+            while (isActive) {
+                Log.i("Coroutines", "running")
+                delay(1000)
+                secondsElapsed++
+                textSecondsElapsed.text = getString(R.string.seconds, secondsElapsed)
             }
         }
     }
