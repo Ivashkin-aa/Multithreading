@@ -5,8 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 class ContWatchExec : AppCompatActivity() {
 
@@ -17,7 +16,7 @@ class ContWatchExec : AppCompatActivity() {
     private lateinit var textSecondsElapsed: TextView
 
 
-    private lateinit var backgroundThread: ExecutorService
+    private lateinit var backgroundThread: Future<*>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,7 +24,6 @@ class ContWatchExec : AppCompatActivity() {
         textSecondsElapsed = findViewById(R.id.textSecondsElapsed)
         sharedPreferences = getSharedPreferences(shrStg, MODE_PRIVATE)
         secondsElapsed = sharedPreferences.getInt(keyCounter, 0)
-
     }
 
     override fun onStop() {
@@ -33,15 +31,14 @@ class ContWatchExec : AppCompatActivity() {
         val edit = sharedPreferences.edit()
         edit.putInt(keyCounter, secondsElapsed)
         edit.apply()
-        backgroundThread.shutdown()
+        backgroundThread.cancel(true)
         Log.i("EXEC", "stopped")
     }
 
     override fun onStart() {
         super.onStart()
-        backgroundThread = Executors.newSingleThreadExecutor()
-        backgroundThread.execute {
-            while (!backgroundThread.isShutdown) {
+        backgroundThread = (application as ExecService).executor.submit {
+            while (!backgroundThread.isCancelled) {
                 Log.i("EXEC", "running")
                 Thread.sleep(1000)
                 secondsElapsed++
@@ -51,5 +48,6 @@ class ContWatchExec : AppCompatActivity() {
             }
         }
     }
+
 
 }

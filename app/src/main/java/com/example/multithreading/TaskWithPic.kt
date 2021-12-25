@@ -10,11 +10,12 @@ import com.example.multithreading.databinding.ActivityMainBinding
 import java.net.URL
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 class TaskWithPic : AppCompatActivity() {
 
     private val img = "https://i.pinimg.com/564x/97/e2/8f/97e28f089c7b4438d458dfd5b51245e2.jpg"
-    private lateinit var exc: ExecutorService
+    private lateinit var exc: Future<*>
     private val bitmap: MutableLiveData<Bitmap> = MutableLiveData()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,29 +33,28 @@ class TaskWithPic : AppCompatActivity() {
             } else {
                 bitmap.value = null
             }
-
-            bitmap.observe(this) {
-                picture.setImageBitmap(it)
-                if (it != null) {
-                    binding.button.text = getString(R.string.clear)
-                } else {
-                    binding.button.text = getString(R.string.download_picture)
-                }
-            }
-
         }
+
+        bitmap.observe(this) {
+            picture.setImageBitmap(it)
+            if (it != null) {
+                binding.button.text = getString(R.string.clear)
+            } else {
+                binding.button.text = getString(R.string.download_picture)
+            }
+        }
+
     }
 
     private fun loadPic(url: URL) {
-        exc = Executors.newSingleThreadExecutor()
-        exc.execute {
+        exc = (application as ExecService).executor.submit {
             bitmap.postValue(BitmapFactory.decodeStream(url.openConnection().getInputStream()))
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        exc.shutdown()
+        exc.cancel(true)
     }
 
 }
